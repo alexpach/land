@@ -2,6 +2,8 @@
 
 A 3D strategy game played on a spherical world.
 
+[**Play Demo**](https://alexpach.github.io/land/)
+
 ## Overview
 
 "Land" is a turn-based strategy game where players compete to capture territory on a Goldberg Polyhedron (a sphere made of hexagons and pentagons). Players place "pucks" on the vertices of the grid to surround and capture tiles.
