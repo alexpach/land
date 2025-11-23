@@ -51,7 +51,6 @@ let gameState;
 let vertexOwners;
 let faceOwners;
 const audioController = new AudioController();
-audioController.load('/music/this_land.mid');
 
 const mapSizes = {
     'Small': 1,
@@ -285,28 +284,23 @@ function createMysteryBoxes() {
 
     // Create Bump Map for Debossed Effect
     const canvas = document.createElement('canvas');
-    canvas.width = 128; // Higher resolution for cleaner text
-    canvas.height = 128;
+    canvas.width = 256; // Higher resolution for cleaner text
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
 
-    // 1. Background: Middle Gray (Neutral) or White (High)
-    // We want the box surface to be "high" and the text to be "low" (debossed).
-    // So background = White (1.0), Text = Black (0.0)
+    // 1. Background: White (High)
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillRect(0, 0, 256, 256);
 
     // 2. Text: Black (Low)
     ctx.fillStyle = '#000000';
-    // Smaller font, centered
-    ctx.font = 'bold 60px "Press Start 2P", monospace'; // Relative to 128px canvas
+    // 75% of box size -> 75% of 256px = 192px
+    ctx.font = 'bold 192px "Press Start 2P", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     // Draw Text
-    ctx.fillText('?', 64, 64);
-
-    // Optional: Blur for smoother slope? 
-    // Pixel art font might look better sharp. Let's keep it sharp for now.
+    ctx.fillText('?', 128, 128);
 
     const bumpMap = new THREE.CanvasTexture(canvas);
 
@@ -326,10 +320,7 @@ function createMysteryBoxes() {
     const matTop = new THREE.MeshStandardMaterial({
         color: 0xFFD700, // Same Gold Color
         bumpMap: bumpMap,
-        bumpScale: -0.05, // Negative for debossing (if Black is Low) - Wait, Three.js bump map: Black=0, White=1.
-        // If surface is White (1) and text is Black (0), we want the text to be "lower".
-        // So positive bumpScale makes White higher than Black.
-        bumpScale: 0.02,
+        bumpScale: 0.15, // Stronger deboss (approx 10% of width)
         roughness: 0.3,
         metalness: 0.8,
         emissive: 0x222200,
@@ -1342,11 +1333,13 @@ startBtn.addEventListener('click', () => {
     // Hide Screen
     setupScreen.style.display = 'none';
 
+    const musicUrl = document.getElementById('music-select').value;
+
     // Start Game
-    startGame(players, movesPerTurn);
+    startGame(players, movesPerTurn, musicUrl);
 });
 
-function startGame(players, movesPerTurn) {
+function startGame(players, movesPerTurn, musicUrl) {
     // Initialize Game State
     gameState = {
         players: players,
@@ -1360,9 +1353,15 @@ function startGame(players, movesPerTurn) {
     createGeometry();
 
     // Start Music
-    audioController.init().then(() => {
-        audioController.play();
-    });
+    if (musicUrl) {
+        audioController.load(musicUrl).then(() => {
+            audioController.init().then(() => {
+                audioController.play();
+            });
+        });
+    } else {
+        audioController.stop();
+    }
 
     createControlsUI();
 
