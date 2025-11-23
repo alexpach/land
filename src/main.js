@@ -1023,8 +1023,8 @@ function createMushroomCloud(position) {
         const scale = 1 + progress * 2;
         cloud.scale.set(scale, scale, scale);
 
-        // Rise (move along normal) - Slower
-        cloud.position.add(normal.clone().multiplyScalar(0.002));
+        // Rise (move along normal) - Strictly 10x Slower (Original was 0.005)
+        cloud.position.add(normal.clone().multiplyScalar(0.0005));
 
         // Change Color to Smoke
         if (progress > 0.5) {
