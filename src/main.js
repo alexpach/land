@@ -283,47 +283,57 @@ function createMysteryBoxes() {
 
     const geometry = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
 
-    // Create Texture with '?' (Debossed Look)
+    // Create Bump Map for Debossed Effect
     const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
+    canvas.width = 128; // Higher resolution for cleaner text
+    canvas.height = 128;
     const ctx = canvas.getContext('2d');
 
-    // Gold Background
-    ctx.fillStyle = '#FFD700';
-    ctx.fillRect(0, 0, 64, 64);
+    // 1. Background: Middle Gray (Neutral) or White (High)
+    // We want the box surface to be "high" and the text to be "low" (debossed).
+    // So background = White (1.0), Text = Black (0.0)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, 128, 128);
 
-    // "Debossed" Effect
-    // 1. Highlight (Bottom-Right edge) - simulating light catching the bottom lip
-    ctx.font = '48px "Press Start 2P", monospace';
+    // 2. Text: Black (Low)
+    ctx.fillStyle = '#000000';
+    // Smaller font, centered
+    ctx.font = 'bold 60px "Press Start 2P", monospace'; // Relative to 128px canvas
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.fillText('?', 34, 34);
 
-    // 2. Shadow (Top-Left edge) - simulating shadow cast by top lip
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillText('?', 30, 30);
+    // Draw Text
+    ctx.fillText('?', 64, 64);
 
-    // 3. Main Text (Dark Hole)
-    ctx.fillStyle = '#332200'; // Dark Brown/Black
-    ctx.fillText('?', 32, 32);
+    // Optional: Blur for smoother slope? 
+    // Pixel art font might look better sharp. Let's keep it sharp for now.
 
-    const texture = new THREE.CanvasTexture(canvas);
+    const bumpMap = new THREE.CanvasTexture(canvas);
 
     // Materials
+    // Single Material for all sides, but we only want the '?' on the Top.
+    // Actually, InstancedMesh supports an array of materials.
+    // We can use a plain Gold material for sides/bottom, and the Bump Map material for Top.
+
     const matGold = new THREE.MeshStandardMaterial({
         color: 0xFFD700,
         roughness: 0.3,
         metalness: 0.8,
-        emissive: 0x222200
+        emissive: 0x222200,
+        emissiveIntensity: 0.2
     });
 
     const matTop = new THREE.MeshStandardMaterial({
-        map: texture,
+        color: 0xFFD700, // Same Gold Color
+        bumpMap: bumpMap,
+        bumpScale: -0.05, // Negative for debossing (if Black is Low) - Wait, Three.js bump map: Black=0, White=1.
+        // If surface is White (1) and text is Black (0), we want the text to be "lower".
+        // So positive bumpScale makes White higher than Black.
+        bumpScale: 0.02,
         roughness: 0.3,
         metalness: 0.8,
-        emissive: 0x222200
+        emissive: 0x222200,
+        emissiveIntensity: 0.2
     });
 
     // Array of materials: Right, Left, Top, Bottom, Front, Back
