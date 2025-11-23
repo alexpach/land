@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Land Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=block" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #111;
+      font-family: 'Press Start 2P', cursive;
+    }
+
+    #game-ui {
+      pointer-events: none;
+      font-family: 'Press Start 2P', cursive;
+    }
+
+    #setup-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      z-index: 2000;
+    }
+
+    .setup-container {
+      background-color: #202080;
+      /* Classic RPG Blue */
+      padding: 40px;
+      border: 4px solid white;
+      border-radius: 8px;
+      box-shadow: 8px 8px 0px #000000;
+      text-align: center;
+      min-width: 400px;
+      image-rendering: pixelated;
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #ffcc00;
+      /* Gold */
+      text-shadow: 4px 4px #000000;
+      font-size: 24px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+
+    .control-group {
+      margin-bottom: 25px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #ffffff;
+      text-shadow: 2px 2px #000000;
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      height: 50px;
+      padding: 10px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 12px;
+      line-height: 1.5;
+      box-sizing: border-box;
+      background: #000000;
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      border-radius: 0;
+      outline: none;
+      box-shadow: inset 2px 2px 0px rgba(0, 0, 0, 0.5);
+    }
+
+    .color-pickers {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      justify-content: center;
+    }
+
+    .color-picker-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .color-picker-wrapper span {
+      font-size: 10px;
+    }
+
+    input[type="color"] {
+      border: 2px solid white;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      background: none;
+      padding: 0;
+    }
+
+    button#start-btn {
+      background: #ff0000;
+      /* Mario Red */
+      color: white;
+      border: 2px solid white;
+      padding: 20px 30px;
+      font-size: 16px;
+      font-family: 'Press Start 2P', cursive;
+      cursor: pointer;
+      margin-top: 20px;
+      width: 100%;
+      text-transform: uppercase;
+      box-shadow: 4px 4px 0px #000000;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    button#start-btn:hover {
+      background: #ff4444;
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000000;
+    }
+
+    button#start-btn:active {
+      transform: translate(4px, 4px);
+      box-shadow: 0px 0px 0px #000000;
+    }
+
+    #error-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      color: #ff5555;
+      font-family: monospace;
+      font-size: 14px;
+      padding: 40px;
+      display: none;
+      z-index: 9999;
+      white-space: pre-wrap;
+      overflow: auto;
+      user-select: text;
+      pointer-events: auto;
+    }
+  </style>
+  <script type="module" crossorigin src="/land/assets/index-CWuaHyka.js"></script>
+</head>
+
+<body>
+  <div id="error-overlay"></div>
+  <script>
+    const originalConsoleError = console.error;
+    console.error = function (...args) {
+      const overlay = document.getElementById('error-overlay');
+      overlay.style.display = 'block';
+      overlay.innerText += `Console Error: ${args.join(' ')}\n\n`;
+      originalConsoleError.apply(console, args);
+    };
+
+    window.onerror = function (msg, url, line, col, error) {
+      const overlay = document.getElementById('error-overlay');
+      overlay.style.display = 'block';
+      overlay.innerText += `Error: ${msg}\nAt: ${url}:${line}:${col}\nStack: ${error ? error.stack : ''}\n\n`;
+    };
+    window.addEventListener('unhandledrejection', function (event) {
+      const overlay = document.getElementById('error-overlay');
+      overlay.style.display = 'block';
+      overlay.innerText += `Promise Rejection: ${event.reason}\n\n`;
+    });
+  </script>
+  <div id="setup-screen">
+    <div class="setup-container">
+      <h1>The Game of Land</h1>
+
+      <div class="control-group">
+        <label>Map Size</label>
+        <select id="map-size">
+          <option value="Small">Small</option>
+          <option value="Medium" selected>Medium</option>
+          <option value="Large">Large</option>
+          <option value="Extra-Large">Extra Large</option>
+          <option value="XXL">XXL</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Moves Per Turn</label>
+        <input type="number" id="moves-per-turn" value="5" min="1" max="9">
+      </div>
+
+      <div class="control-group">
+        <label>Music</label>
+        <select id="music-select">
+          <option value="">None</option>
+          <option value="/music/woodie_guthrie.mid" selected>Woodie Guthrie - This Land</option>
+          <option value="/music/this_land.mid">Simple Melody (Generated)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Players</label>
+        <select id="player-count">
+          <option value="2" selected>2 Players</option>
+          <option value="3">3 Players</option>
+          <option value="4">4 Players</option>
+        </select>
+
+        <div id="color-container" class="color-pickers">
+          <!-- Dynamic Color Pickers -->
+        </div>
+      </div>
+
+      <button id="start-btn">Start Game</button>
+    </div>
+  </div>
+</body>
+
+</html>
