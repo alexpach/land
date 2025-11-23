@@ -39,3 +39,4 @@ A 3D strategy game played on a spherical world.
     ```bash
     npm run dev
     ```
+\n\n---\nCopyright &copy; 2025 Alex Pachikov. All rights reserved.

@@ -54,3 +54,4 @@ The game ends when either:
 2.  **Domination**: All vertices on the board are filled. The player with the most captured tiles wins.
 
 If the game ends with a tie in scores, it is a Draw.
+\n\n---\nCopyright &copy; 2025 Alex Pachikov. All rights reserved.
