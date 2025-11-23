@@ -943,7 +943,7 @@ function createFlyingPuck(vIdx, position) {
 
     // Animate
     const startTime = Date.now();
-    const duration = 1500;
+    const duration = 1500; // 1.5 seconds
     const direction = position.clone().normalize();
     const randomOffset = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(0.5);
     direction.add(randomOffset).normalize();
@@ -959,8 +959,8 @@ function createFlyingPuck(vIdx, position) {
             return;
         }
 
-        // Move outwards
-        mesh.position.add(direction.clone().multiplyScalar(0.2)); // Use clone to avoid modifying original direction
+        // Move outwards - 10x Slower
+        mesh.position.add(direction.clone().multiplyScalar(0.02));
         // Rotate randomly
         mesh.rotation.x += 0.1;
         mesh.rotation.z += 0.1;
@@ -1003,7 +1003,7 @@ function createMushroomCloud(position) {
 
     // Animate
     const startTime = Date.now();
-    const duration = 5000; // 5x slower
+    const duration = 1500; // 1.5 seconds
 
     function animateCloud() {
         const elapsed = Date.now() - startTime;
@@ -1019,11 +1019,12 @@ function createMushroomCloud(position) {
         }
 
         // Expand and Rise
-        const scale = 1 + progress * 3;
+        // Max 300% scale (1 + 2)
+        const scale = 1 + progress * 2;
         cloud.scale.set(scale, scale, scale);
 
-        // Rise (move along normal)
-        cloud.position.add(normal.clone().multiplyScalar(0.005)); // Slower rise
+        // Rise (move along normal) - Slower
+        cloud.position.add(normal.clone().multiplyScalar(0.002));
 
         // Change Color to Smoke
         if (progress > 0.5) {
