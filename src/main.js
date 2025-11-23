@@ -8,7 +8,7 @@ console.log("Land Game Starting...");
 
 // Scene Setup
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111111);
+// scene.background = new THREE.Color(0x111111); // Removed for Starfield
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
@@ -902,6 +902,9 @@ function openMysteryBox(playerId, faceIdx, instanceId) {
 
                 // Hide original puck
                 setPuckScale(vIdx, 0);
+
+                // Fix: Reset color to neutral (Gray) so it doesn't show old owner's color on hover
+                setPointColor(vIdx, 0.533, 0.533, 0.533); // 0x888888 approx
             }
         });
         vertexInstancedMesh.instanceColor.needsUpdate = true;
@@ -1440,9 +1443,82 @@ window.addEventListener('mouseup', onInteractionEnd);
 window.addEventListener('touchstart', onInteractionStart);
 window.addEventListener('touchend', onInteractionEnd);
 
+// Starfield
+let starfield;
+function createStarfield() {
+    const starCount = 2000;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(starCount * 3);
+    const sizes = new Float32Array(starCount);
+    const shifts = new Float32Array(starCount); // Random time offset for twinkling
+
+    for (let i = 0; i < starCount; i++) {
+        // Random position in a large sphere
+        const r = 400 + Math.random() * 400; // Distance 400-800
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = r * Math.cos(phi);
+
+        sizes[i] = Math.random() * 2.0 + 0.5; // Size 0.5 - 2.5
+        shifts[i] = Math.random() * 100;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    geometry.setAttribute('shift', new THREE.BufferAttribute(shifts, 1));
+
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            uTime: { value: 0 },
+            uColor: { value: new THREE.Color(0xffffff) }
+        },
+        vertexShader: `
+            attribute float size;
+            attribute float shift;
+            varying float vShift;
+            void main() {
+                vShift = shift;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_PointSize = size * (300.0 / -mvPosition.z);
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `,
+        fragmentShader: `
+            uniform float uTime;
+            uniform vec3 uColor;
+            varying float vShift;
+            void main() {
+                // Circular particle
+                vec2 coord = gl_PointCoord - vec2(0.5);
+                if(length(coord) > 0.5) discard;
+
+                // Twinkle
+                float brightness = 0.5 + 0.5 * sin(uTime * 2.0 + vShift);
+                gl_FragColor = vec4(uColor, brightness);
+            }
+        `,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+    });
+
+    starfield = new THREE.Points(geometry, material);
+    scene.add(starfield);
+}
+
+createStarfield();
+
 // Animation Loop
 function animate() {
     requestAnimationFrame(animate);
+
+    // Update Starfield
+    if (starfield && starfield.material.uniforms) {
+        starfield.material.uniforms.uTime.value = performance.now() / 1000;
+    }
 
     if (isAnimatingCamera && cameraTargetPosition) {
         // Spherical interpolation: Lerp then Normalize
