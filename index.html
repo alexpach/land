@@ -6,7 +6,7 @@
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Land Game</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=block" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -73,9 +73,12 @@
     select,
     input[type="number"] {
       width: 100%;
+      height: 50px;
       padding: 10px;
       font-family: 'Press Start 2P', cursive;
       font-size: 12px;
+      line-height: 1.5;
+      box-sizing: border-box;
       background: #000000;
       color: #ffffff;
       border: 2px solid #ffffff;
@@ -199,6 +202,15 @@
       <div class="control-group">
         <label>Moves Per Turn</label>
         <input type="number" id="moves-per-turn" value="5" min="1" max="9">
+      </div>
+
+      <div class="control-group">
+        <label>Music</label>
+        <select id="music-select">
+          <option value="">None</option>
+          <option value="/music/woodie_guthrie.mid" selected>Woodie Guthrie - This Land</option>
+          <option value="/music/this_land.mid">Simple Melody (Generated)</option>
+        </select>
       </div>
 
       <div class="control-group">

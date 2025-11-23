@@ -3,15 +3,18 @@ export class AudioController {
         this.audioContext = null;
         this.isPlaying = false;
         this.midiData = null;
-        this.nextNoteTime = 0;
         this.currentNoteIndex = 0;
-        this.tempo = 120; // Default, will be read from MIDI
-        this.lookahead = 25.0; // How frequently to call scheduling function (in milliseconds)
-        this.scheduleAheadTime = 0.1; // How far ahead to schedule audio (sec)
+        this.baseTempo = 230; // Default BPM
+        this.currentTempo = 230;
+        this.ticksPerQuarter = 128; // Default, will be read from MIDI
+        this.lookahead = 25.0; // ms
+        this.scheduleAheadTime = 0.1; // sec
         this.timerID = null;
-        this.notes = [];
+        this.notes = []; // Stores { note, startTicks, durationTicks }
+        this.totalTicks = 0;
         this.masterGain = null;
         this.isMuted = false;
+        this.songStartTime = 0;
     }
 
     async init() {
@@ -26,6 +29,9 @@ export class AudioController {
     }
 
     async load(url) {
+        this.stop();
+        if (!url) return;
+
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
         this.midiData = new Uint8Array(arrayBuffer);
@@ -33,8 +39,6 @@ export class AudioController {
     }
 
     parseMidi() {
-        // Simple MIDI Parser for Format 0/1
-        // This is a simplified parser focusing on Note On/Off events in the first track
         let p = 0;
 
         // Header Chunk
@@ -42,33 +46,47 @@ export class AudioController {
         const headerLength = this.readInt32(p); p += 4;
         const format = this.readInt16(p); p += 2;
         const numTracks = this.readInt16(p); p += 2;
-        const timeDivision = this.readInt16(p); p += 2;
+        this.ticksPerQuarter = this.readInt16(p); p += 2;
 
-        // Find first track
-        while (p < this.midiData.length) {
-            const chunkType = this.readString(p, 4); p += 4;
-            const chunkLength = this.readInt32(p); p += 4;
+        let bestTrackNotes = [];
+        let maxNoteCount = -1;
 
-            if (chunkType === 'MTrk') {
-                this.parseTrack(p, chunkLength, timeDivision);
-                break; // Only parse first track for now
+        // Iterate through all tracks
+        for (let i = 0; i < numTracks; i++) {
+            // Find next track chunk
+            while (p < this.midiData.length) {
+                const chunkType = this.readString(p, 4); p += 4;
+                const chunkLength = this.readInt32(p); p += 4;
+
+                if (chunkType === 'MTrk') {
+                    const trackNotes = this.parseTrack(p, chunkLength);
+                    if (trackNotes.length > maxNoteCount) {
+                        maxNoteCount = trackNotes.length;
+                        bestTrackNotes = trackNotes;
+                    }
+                    p += chunkLength;
+                    break; // Move to next track iteration
+                } else {
+                    p += chunkLength; // Skip unknown chunks
+                }
             }
-            p += chunkLength;
         }
+
+        this.notes = bestTrackNotes;
+        this.processNotes();
     }
 
-    parseTrack(start, length, ticksPerQuarter) {
+    parseTrack(start, length) {
         let p = start;
         const end = start + length;
-        let currentTime = 0; // In ticks
+        let currentTicks = 0;
         let lastStatus = null;
-
-        this.notes = [];
+        const trackNotes = [];
 
         while (p < end) {
             const { value: deltaTime, bytesRead } = this.readVarInt(p);
             p += bytesRead;
-            currentTime += deltaTime;
+            currentTicks += deltaTime;
 
             let status = this.midiData[p];
             if (status & 0x80) {
@@ -79,62 +97,74 @@ export class AudioController {
             }
 
             const type = status & 0xF0;
-            const channel = status & 0x0F;
 
             if (type === 0x90) { // Note On
                 const note = this.midiData[p++];
                 const velocity = this.midiData[p++];
                 if (velocity > 0) {
-                    this.notes.push({
+                    trackNotes.push({
                         note: note,
-                        startTime: currentTime, // Ticks
-                        duration: 0 // Will be filled by Note Off
+                        startTicks: currentTicks,
+                        durationTicks: 0
                     });
                 } else {
-                    // Note On with velocity 0 is Note Off
-                    this.closeNote(note, currentTime);
+                    this.closeTrackNote(trackNotes, note, currentTicks);
                 }
             } else if (type === 0x80) { // Note Off
                 const note = this.midiData[p++];
                 const velocity = this.midiData[p++];
-                this.closeNote(note, currentTime);
+                this.closeTrackNote(trackNotes, note, currentTicks);
             } else if (type === 0xFF) { // Meta Event
                 const metaType = this.midiData[p++];
                 const { value: len, bytesRead: lenBytes } = this.readVarInt(p);
                 p += lenBytes;
-
-                if (metaType === 0x51) { // Tempo
-                    const microsecondsPerQuarter = (this.midiData[p] << 16) | (this.midiData[p + 1] << 8) | this.midiData[p + 2];
-                    this.tempo = 60000000 / microsecondsPerQuarter;
-                }
                 p += len;
             } else {
-                // Skip other events (simplified)
-                // Note: This might break if there are other variable length events, 
-                // but for our generated MIDI it should be fine.
-                // A robust parser would handle all event types.
                 if (type === 0xC0 || type === 0xD0) p += 1;
                 else if (type === 0xB0 || type === 0xE0 || type === 0xA0) p += 2;
             }
         }
-
-        // Convert ticks to seconds
-        const secondsPerTick = 60 / this.tempo / ticksPerQuarter;
-        this.notes.forEach(n => {
-            n.startTime *= secondsPerTick;
-            n.duration *= secondsPerTick;
-        });
+        return trackNotes;
     }
 
-    closeNote(note, endTime) {
-        // Find the last open note with this pitch
-        for (let i = this.notes.length - 1; i >= 0; i--) {
-            if (this.notes[i].note === note && this.notes[i].duration === 0) {
-                this.notes[i].duration = endTime - this.notes[i].startTime;
+    closeTrackNote(trackNotes, note, endTicks) {
+        for (let i = trackNotes.length - 1; i >= 0; i--) {
+            if (trackNotes[i].note === note && trackNotes[i].durationTicks === 0) {
+                trackNotes[i].durationTicks = endTicks - trackNotes[i].startTicks;
                 break;
             }
         }
     }
+
+    processNotes() {
+        if (this.notes.length === 0) {
+            this.totalTicks = 0;
+            return;
+        }
+
+        // 1. Find min start tick (Leading Silence)
+        let minTick = this.notes[0].startTicks;
+        this.notes.forEach(n => {
+            if (n.startTicks < minTick) minTick = n.startTicks;
+        });
+
+        // 2. Trim Silence
+        this.notes.forEach(n => {
+            n.startTicks -= minTick;
+        });
+
+        // 3. Calculate Total Ticks (Length)
+        this.totalTicks = 0;
+        this.notes.forEach(n => {
+            const end = n.startTicks + n.durationTicks;
+            if (end > this.totalTicks) this.totalTicks = end;
+        });
+
+        // Add a small buffer at the end (e.g., a quarter note) to let the last note ring out slightly?
+        // Or just keep it tight. User complained about gap, so tight is better.
+    }
+
+
 
     readString(offset, length) {
         let str = '';
@@ -168,35 +198,66 @@ export class AudioController {
         if (this.isPlaying) return;
         this.isPlaying = true;
         this.currentNoteIndex = 0;
-        this.songStartTime = undefined; // Will be set in scheduler
+        this.currentTempo = 230; // Start at 230 BPM
+        this.songStartTime = undefined;
         this.scheduler();
     }
 
     stop() {
         this.isPlaying = false;
-        clearTimeout(this.timerID);
+        if (this.timerID) {
+            clearTimeout(this.timerID);
+            this.timerID = null;
+        }
+        if (this.masterGain) {
+            this.masterGain.gain.cancelScheduledValues(this.audioContext.currentTime);
+            this.masterGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+            if (!this.isMuted) {
+                this.masterGain.gain.setTargetAtTime(1, this.audioContext.currentTime + 0.1, 0.1);
+            }
+        }
     }
 
     scheduler() {
-        // If we haven't started the song time yet, do it now
         if (this.songStartTime === undefined) {
             this.songStartTime = this.audioContext.currentTime + 0.1;
         }
 
-        while (this.currentNoteIndex < this.notes.length &&
-            this.songStartTime + this.notes[this.currentNoteIndex].startTime < this.audioContext.currentTime + this.scheduleAheadTime) {
-            this.scheduleNote();
+        const secondsPerTick = 60 / this.currentTempo / this.ticksPerQuarter;
+
+        while (this.currentNoteIndex < this.notes.length) {
+            const note = this.notes[this.currentNoteIndex];
+            const noteTime = this.songStartTime + (note.startTicks * secondsPerTick);
+
+            if (noteTime < this.audioContext.currentTime + this.scheduleAheadTime) {
+                this.playTone(note.note, noteTime, note.durationTicks * secondsPerTick);
+                this.currentNoteIndex++;
+            } else {
+                break;
+            }
         }
 
-        // Loop logic
+        // Loop Logic
         if (this.currentNoteIndex >= this.notes.length && this.notes.length > 0) {
-            // Check if the last note has finished playing
-            const lastNote = this.notes[this.notes.length - 1];
-            const lastNoteEndTime = this.songStartTime + lastNote.startTime + lastNote.duration;
+            // Calculate when the current loop ends
+            const loopDuration = this.totalTicks * secondsPerTick;
+            const loopEndTime = this.songStartTime + loopDuration;
 
-            if (this.audioContext.currentTime > lastNoteEndTime + 1.0) { // 1 second pause
+            // If we are close to the end of the loop, schedule the next loop
+            if (loopEndTime < this.audioContext.currentTime + this.scheduleAheadTime) {
+                // Update Start Time for next loop
+                this.songStartTime = loopEndTime;
                 this.currentNoteIndex = 0;
-                this.songStartTime = this.audioContext.currentTime + 0.1;
+
+                // Randomly change tempo (+/- 20 BPM)
+                const change = Math.random() < 0.5 ? -20 : 20;
+                this.currentTempo += change;
+
+                // Clamp tempo to reasonable limits (e.g., 60 - 400)
+                if (this.currentTempo < 60) this.currentTempo = 60;
+                if (this.currentTempo > 400) this.currentTempo = 400;
+
+                console.log(`Looping! New Tempo: ${this.currentTempo} BPM`);
             }
         }
 
@@ -205,19 +266,11 @@ export class AudioController {
         }
     }
 
-    scheduleNote() {
-        const note = this.notes[this.currentNoteIndex];
-        const absolutePlayTime = this.songStartTime + note.startTime;
-
-        this.playTone(note.note, absolutePlayTime, note.duration);
-        this.currentNoteIndex++;
-    }
-
     playTone(midiNote, time, duration) {
         const osc = this.audioContext.createOscillator();
         const gain = this.audioContext.createGain();
 
-        osc.type = 'square'; // 8-bit sound
+        osc.type = 'square';
         osc.frequency.value = 440 * Math.pow(2, (midiNote - 69) / 12);
 
         osc.connect(gain);
@@ -226,7 +279,6 @@ export class AudioController {
         osc.start(time);
         osc.stop(time + duration);
 
-        // Envelope to avoid clicking
         gain.gain.setValueAtTime(0.1, time);
         gain.gain.exponentialRampToValueAtTime(0.01, time + duration - 0.01);
     }

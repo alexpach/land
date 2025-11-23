@@ -1389,6 +1389,10 @@ function startGame(players, movesPerTurn, musicUrl) {
         scores: new Array(players.length).fill(0)
     };
 
+    // Force Auto-Rotation Start
+    isAutoRotating = true;
+    if (interactionTimeout) clearTimeout(interactionTimeout);
+
     createGeometry();
 
     // Start Music

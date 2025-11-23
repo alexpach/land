@@ -43,7 +43,7 @@ Pentagons (the 12 special tiles on the sphere) contain **Mystery Boxes**.
     *   **BOMB!** (25% chance):
         *   **Explosion**: A mushroom cloud appears!
         *   **Debris**: All pucks on the pentagon are blown away (removed from the board).
-        *   **Reset**: The pentagon becomes unowned (sand color).
+        *   **Unclaim**: Any land (hexagons or pentagons) that relied on the destroyed pucks becomes **unowned** and reverts to its original color.
         *   **Turn End**: The explosion takes time, delaying the next player's turn slightly.
 
 ## Winning Conditions
