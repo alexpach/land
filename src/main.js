@@ -122,7 +122,7 @@ function createGeometry() {
     });
 
     goldbergMesh = new THREE.Mesh(geometry, material);
-    scene.add(goldbergMesh);
+    gameGroup.add(goldbergMesh);
 
     // Create Integrated Grid and Nodes
     const connectivity = geometry.userData.connectivity;
@@ -153,7 +153,7 @@ function createGeometry() {
         });
 
         const gridMesh = new THREE.LineSegments(gridGeo, gridMat);
-        scene.add(gridMesh);
+        gameGroup.add(gridMesh);
         window.gridMesh = gridMesh;
         // Store reference if needed, or just let it be part of the scene
         // For now, we don't interact with the grid lines directly
@@ -235,7 +235,7 @@ function createGeometry() {
         vertexInstancedMesh.instanceMatrix.needsUpdate = true;
         vertexInstancedMesh.instanceColor.needsUpdate = true;
 
-        scene.add(vertexInstancedMesh);
+        gameGroup.add(vertexInstancedMesh);
     }
 
     // Create Mystery Boxes on Pentagons
@@ -363,7 +363,7 @@ function createMysteryBoxes() {
     });
 
     mysteryBoxMesh.instanceMatrix.needsUpdate = true;
-    scene.add(mysteryBoxMesh);
+    gameGroup.add(mysteryBoxMesh);
 }
 
 // Interaction Handler
@@ -942,7 +942,7 @@ function createFlyingPuck(vIdx, position) {
     // Orient to normal (approx)
     mesh.lookAt(new THREE.Vector3(0, 0, 0));
 
-    scene.add(mesh);
+    gameGroup.add(mesh);
 
     // Animate
     const startTime = Date.now();
@@ -1002,7 +1002,7 @@ function createMushroomCloud(position) {
     stem.position.set(0, 0.5, 0);
     cap.position.set(0, 1.0, 0);
 
-    scene.add(cloud);
+    gameGroup.add(cloud);
 
     // Animate
     const startTime = Date.now();
@@ -1511,6 +1511,12 @@ function createStarfield() {
 
 createStarfield();
 
+// Game Group (for rotation)
+const gameGroup = new THREE.Group();
+scene.add(gameGroup);
+
+// ... (existing code) ...
+
 // Animation Loop
 function animate() {
     requestAnimationFrame(animate);
@@ -1538,14 +1544,10 @@ function animate() {
 
         // Auto-Rotation
         if (isAutoRotating) {
-            // Rotate camera around the center (0,0,0)
-            // We can just apply a rotation to the camera position
-            const speed = 0.001; // Slow rotation
-            const x = camera.position.x;
-            const z = camera.position.z;
-            camera.position.x = x * Math.cos(speed) - z * Math.sin(speed);
-            camera.position.z = x * Math.sin(speed) + z * Math.cos(speed);
-            camera.lookAt(0, 0, 0);
+            // Rotate the GAME GROUP, not the camera
+            // This ensures the background (stars) stays static relative to the camera's orbit
+            // but the sphere spins.
+            gameGroup.rotation.y += 0.001;
         }
     }
 
