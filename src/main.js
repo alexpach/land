@@ -891,11 +891,23 @@ function openMysteryBox(playerId, faceIdx, instanceId) {
         // Set Delay for Turn Switch
         gameState.animationDelay = 5000; // 5 seconds
 
-        // 1. Remove Pucks (Visuals: Fly away)
+        // 1. Remove Pucks (Visuals: Fly away) & Identify Affected Faces
+        const affectedFaces = new Set();
+        // Always include the bomb's own face
+        affectedFaces.add(faceIdx);
+
         face.indices.forEach(vIdx => {
             if (vertexOwners.has(vIdx)) {
                 vertexOwners.delete(vIdx);
                 // Reset logical owner immediately
+
+                // Find all faces connected to this vertex
+                // Since we don't have a direct vertex->face map, we iterate (perf is fine here)
+                connectivity.faces.forEach((f, fIdx) => {
+                    if (f.indices.includes(vIdx)) {
+                        affectedFaces.add(fIdx);
+                    }
+                });
 
                 // Create Flying Debris
                 createFlyingPuck(vIdx, connectivity.vertices[vIdx]);
@@ -909,15 +921,35 @@ function openMysteryBox(playerId, faceIdx, instanceId) {
         });
         vertexInstancedMesh.instanceColor.needsUpdate = true;
 
-        // 2. Reset Land (Pentagon)
-        faceOwners.delete(faceIdx);
+        // 2. Reset Land (Unclaim Affected Faces)
         const meshColors = goldbergMesh.geometry.attributes.color;
-        const range = face.bufferRange;
-        // Sand Color for Pentagon
-        const sandColor = new THREE.Color(0xeecfa1);
-        for (let k = 0; k < range.count; k++) {
-            meshColors.setXYZ(range.start + k, sandColor.r, sandColor.g, sandColor.b);
-        }
+
+        affectedFaces.forEach(fIdx => {
+            if (faceOwners.has(fIdx)) {
+                const ownerId = faceOwners.get(fIdx);
+                faceOwners.delete(fIdx);
+
+                // Decrement Score
+                if (gameState.scores[ownerId] > 0) {
+                    gameState.scores[ownerId]--;
+                }
+
+                // Reset Color
+                const f = connectivity.faces[fIdx];
+                const range = f.bufferRange;
+                let baseColor;
+
+                if (f.type === 'pentagon') {
+                    baseColor = new THREE.Color(0xc2b280); // Sand
+                } else {
+                    baseColor = new THREE.Color(0x006994); // Ocean Blue
+                }
+
+                for (let k = 0; k < range.count; k++) {
+                    meshColors.setXYZ(range.start + k, baseColor.r, baseColor.g, baseColor.b);
+                }
+            }
+        });
         meshColors.needsUpdate = true;
 
         // 3. Explosion FX (Mushroom Cloud)
@@ -1435,10 +1467,10 @@ function onInteractionStart() {
 }
 
 function onInteractionEnd() {
-    // Resume auto-rotation after 3 seconds of inactivity
+    // Resume auto-rotation after 5 seconds of inactivity
     interactionTimeout = setTimeout(() => {
         isAutoRotating = true;
-    }, 3000);
+    }, 5000);
 }
 
 window.addEventListener('mousedown', onInteractionStart);
