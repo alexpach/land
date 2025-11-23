@@ -1117,7 +1117,10 @@ function updateHover() {
     const intersects = raycaster.intersectObject(goldbergMesh);
 
     if (intersects.length > 0) {
-        const point = intersects[0].point;
+        // Fix: Convert world point to local point because the mesh (gameGroup) is rotating!
+        // The vertices are stored in local space.
+        const point = intersects[0].point.clone();
+        goldbergMesh.worldToLocal(point);
 
         // Find closest vertex
         const connectivity = goldbergMesh.geometry.userData.connectivity;
