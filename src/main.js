@@ -1421,6 +1421,10 @@ let interactionTimeout;
 
 function onInteractionStart() {
     isAutoRotating = false;
+    // Fix: Cancel any active camera animation so user can take control
+    isAnimatingCamera = false;
+    cameraTargetPosition = null;
+
     if (interactionTimeout) clearTimeout(interactionTimeout);
 }
 
