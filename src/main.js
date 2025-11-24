@@ -418,6 +418,26 @@ function toggleVertexSelection(index) {
 
         // 1. Own Puck: Undo?
         if (ownerId === currentPlayer.id && gameState.pucksPlacedInTurn.has(index)) {
+            // Fix: Cannot undo if this puck is part of a claimed land!
+            const connectivity = goldbergMesh.geometry.userData.connectivity;
+            const faces = connectivity.faces;
+            let isPartOfClaim = false;
+
+            for (let i = 0; i < faces.length; i++) {
+                const face = faces[i];
+                if (face.indices.includes(index)) {
+                    if (faceOwners.get(i) === currentPlayer.id) {
+                        isPartOfClaim = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isPartOfClaim) {
+                console.log("Cannot remove puck that is part of claimed land!");
+                return;
+            }
+
             // Undo move
             vertexOwners.delete(index);
             gameState.pucksPlacedInTurn.delete(index);
