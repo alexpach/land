@@ -600,7 +600,10 @@ function rotateCameraToPlayer(playerId) {
     }
 
     if (target) {
-        // Normalize to surface
+        // Fix: Transform local target to World Space because the gameGroup rotates
+        target.applyMatrix4(gameGroup.matrixWorld);
+
+        // Normalize to surface distance (camera orbit radius)
         target.normalize().multiplyScalar(camera.position.length());
 
         isAnimatingCamera = true;
