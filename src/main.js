@@ -616,10 +616,10 @@ function switchTurn() {
     // Show Banner
     showTurnBanner(`${currentPlayer.name}'s Turn`, currentPlayer.color);
 
-    // Unlock Input after banner (2 seconds)
+    // Unlock Input after banner (1.2 seconds)
     setTimeout(() => {
         if (gameState) gameState.isInputLocked = false;
-    }, 2000);
+    }, 1200);
 
     updateTurnUI();
     rotateCameraToPlayer(currentPlayer);
@@ -1319,10 +1319,10 @@ function showTurnBanner(text, color) {
     banner.style.color = `#${color.getHexString()}`;
     banner.style.opacity = '1';
 
-    // Hide after 2 seconds
+    // Hide after 1.2 seconds
     setTimeout(() => {
         banner.style.opacity = '0';
-    }, 2000);
+    }, 1200);
 }
 
 function updateTurnUI() {
