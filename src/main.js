@@ -1264,15 +1264,6 @@ function updateTurnUI() {
     if (!ui) {
         ui = document.createElement('div');
         ui.id = 'game-ui';
-        ui.style.position = 'absolute';
-        ui.style.top = '20px';
-        ui.style.left = '20px';
-        ui.style.color = 'white';
-        ui.style.fontFamily = "'Press Start 2P', cursive"; // Retro Font
-        ui.style.fontSize = '16px'; // Slightly smaller for pixel font
-        ui.style.pointerEvents = 'none';
-        ui.style.textShadow = '2px 2px 0px black'; // Hard shadow
-        ui.style.lineHeight = '1.5';
         document.body.appendChild(ui);
     }
 
@@ -1308,26 +1299,12 @@ function createControlsUI() {
     if (!controls) {
         controls = document.createElement('div');
         controls.id = 'controls-ui';
-        controls.style.position = 'absolute';
-        controls.style.bottom = '20px';
-        controls.style.right = '20px';
-        controls.style.display = 'flex';
-        controls.style.gap = '10px';
-        controls.style.zIndex = '1000';
         document.body.appendChild(controls);
     }
 
     // Mute Button
     const muteBtn = document.createElement('button');
     muteBtn.innerText = 'MUTE';
-    muteBtn.style.background = '#333';
-    muteBtn.style.color = 'white';
-    muteBtn.style.border = '2px solid white';
-    muteBtn.style.padding = '10px 15px';
-    muteBtn.style.fontFamily = "'Press Start 2P', cursive";
-    muteBtn.style.fontSize = '12px';
-    muteBtn.style.cursor = 'pointer';
-    muteBtn.style.boxShadow = '4px 4px 0px black';
 
     muteBtn.addEventListener('click', () => {
         const isMuted = audioController.toggleMute();
