@@ -461,6 +461,8 @@ window.addEventListener('touchmove', onTouchMove, { passive: false });
 window.addEventListener('touchend', onTouchEnd);
 
 function toggleVertexSelection(index) {
+    if (gameState.isInputLocked) return; // Prevent moves if locked
+
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 
     // If already owned
@@ -598,16 +600,29 @@ function toggleVertexSelection(index) {
 }
 
 function switchTurn() {
+    // Lock Input
+    gameState.isInputLocked = true;
+
+    // Reset moves
     gameState.movesInTurn = 0;
-    gameState.pucksPlacedInTurn.clear(); // Reset undo history for new turn
+    gameState.pucksPlacedInTurn.clear();
 
+    // Next player
     gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
-    const nextPlayer = gameState.players[gameState.currentPlayerIndex];
-    console.log(`Turn Switch! Now Player ${nextPlayer.name}'s turn.`);
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 
-    rotateCameraToPlayer(nextPlayer.id);
-    showTurnBanner(`${nextPlayer.name}'s Turn`, nextPlayer.color);
+    console.log(`Turn switched to ${currentPlayer.name}`);
+
+    // Show Banner
+    showTurnBanner(`${currentPlayer.name}'s Turn`, currentPlayer.color);
+
+    // Unlock Input after banner (2 seconds)
+    setTimeout(() => {
+        if (gameState) gameState.isInputLocked = false;
+    }, 2000);
+
     updateTurnUI();
+    rotateCameraToPlayer(currentPlayer);
 }
 
 // ... (omitted code) ...
@@ -1435,12 +1450,12 @@ function startGame(players, movesPerTurn, musicUrl) {
         players: players,
         currentPlayerIndex: 0,
         movesInTurn: 0,
-        maxMovesPerTurn: movesPerTurn,
+        maxMovesPerTurn: parseInt(document.getElementById('moves-per-turn').value) || 5,
+        scores: new Array(players.length).fill(0), // Changed playerCount to players.length for consistency
         pucksPlacedInTurn: new Set(),
-        scores: new Array(players.length).fill(0)
+        animationDelay: 0,
+        isInputLocked: false // New: Lock input during turn switch
     };
-
-    // Force Auto-Rotation Start
     isAutoRotating = true;
     if (interactionTimeout) clearTimeout(interactionTimeout);
 
