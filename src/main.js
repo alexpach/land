@@ -672,7 +672,7 @@ function rotateCameraToPlayer(player) {
             // 3. Fallback: Center of all owned pucks
             const myPucks = [];
             vertexOwners.forEach((owner, vIdx) => {
-                if (owner === playerId) {
+                if (owner === player.id) {
                     myPucks.push(vertices[vIdx]);
                 }
             });
