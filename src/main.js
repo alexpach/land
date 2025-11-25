@@ -633,18 +633,18 @@ function switchTurn() {
 let cameraTargetPosition = null;
 let isAnimatingCamera = false;
 
-function rotateCameraToPlayer(playerId) {
+function rotateCameraToPlayer(player) {
     const connectivity = goldbergMesh.geometry.userData.connectivity;
     if (!connectivity) return;
 
     const vertices = connectivity.vertices;
     const faces = connectivity.faces;
 
-    const player = gameState.players[playerId];
+    // const player = gameState.players[playerId]; // No longer needed
     let target = null;
 
     // 1. Priority: Last Placed Puck
-    if (player.lastPuckIndex !== null && vertexOwners.get(player.lastPuckIndex) === playerId) {
+    if (player.lastPuckIndex !== null && vertexOwners.get(player.lastPuckIndex) === player.id) {
         target = vertices[player.lastPuckIndex].clone();
     }
     // 2. Fallback: Center of Captured Territory
@@ -652,7 +652,7 @@ function rotateCameraToPlayer(playerId) {
         // Collect all captured face centers for this player
         const capturedCenters = [];
         faceOwners.forEach((owner, faceIdx) => {
-            if (owner === playerId) {
+            if (owner === player.id) {
                 const face = faces[faceIdx];
                 let center = new THREE.Vector3();
                 face.indices.forEach(vIdx => {
