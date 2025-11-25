@@ -409,6 +409,57 @@ window.addEventListener('mouseup', onMouseUp);
 window.addEventListener('click', onMouseClick);
 window.addEventListener('mousemove', onMouseMove);
 
+// Touch Support
+function onTouchStart(event) {
+    if (event.touches.length > 1) return; // Ignore multi-touch (pinch zoom handled by controls?)
+
+    onInteractionStart();
+    isDragging = false;
+    startCameraPos.copy(camera.position);
+
+    // Update mouse for raycaster
+    const touch = event.touches[0];
+    mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+
+    updateHover();
+}
+
+function onTouchMove(event) {
+    if (event.touches.length > 1) return;
+
+    const touch = event.touches[0];
+    mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+
+    // Optional: Update hover while dragging? 
+    // Usually better to only update on tap for performance/clarity on mobile
+}
+
+function onTouchEnd(event) {
+    // Calculate drag distance/angle
+    const angle = startCameraPos.angleTo(camera.position) * (180 / Math.PI);
+
+    if (angle > dragAngleThreshold) {
+        isDragging = true;
+    } else {
+        isDragging = false;
+        // It was a tap!
+        // We need to re-run raycast because 'hoveredVertex' might be stale if we didn't update during move
+        // Or just rely on the last touchstart position.
+
+        // Let's force an update
+        updateHover();
+        if (hoveredVertex !== null) {
+            toggleVertexSelection(hoveredVertex);
+        }
+    }
+}
+
+window.addEventListener('touchstart', onTouchStart, { passive: false });
+window.addEventListener('touchmove', onTouchMove, { passive: false });
+window.addEventListener('touchend', onTouchEnd);
+
 function toggleVertexSelection(index) {
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 
