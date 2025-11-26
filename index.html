@@ -221,7 +221,7 @@
       .setup-container {
         min-width: 0;
         /* Override the 400px min-width */
-        width: 90%;
+        width: 85%;
         padding: 20px;
         margin: 0 auto;
         /* Ensure centering */
@@ -256,6 +256,8 @@
         font-size: 10px;
         top: max(10px, env(safe-area-inset-top));
         left: max(10px, env(safe-area-inset-left));
+        max-width: 85%;
+        /* Prevent text from hitting right edge */
       }
 
       #controls-ui {
@@ -284,7 +286,7 @@
       }
     }
   </style>
-  <script type="module" crossorigin src="/land/assets/index-Dxl6qNDs.js"></script>
+  <script type="module" crossorigin src="/land/assets/index-CHDyc37r.js"></script>
 </head>
 
 <body>
@@ -336,7 +338,6 @@
         <select id="music-select">
           <option value="">None</option>
           <option value="/music/woodie_guthrie.mid" selected>Woodie Guthrie - This Land</option>
-          <option value="/music/country_roads.mid">Take Me Home, Country Roads (Full)</option>
           <option value="/music/mountain_king.mid">In the Hall of the Mountain King (Generated)</option>
           <option value="/music/test_scale.mid">Chromatic Scale (Test)</option>
           <option value="/music/this_land.mid">Simple Melody (Generated)</option>
