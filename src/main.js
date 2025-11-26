@@ -19,7 +19,7 @@ document.body.appendChild(renderer.domElement);
 
 // Controls
 const controls = new TrackballControls(camera, renderer.domElement);
-controls.rotateSpeed = 2.0;
+controls.rotateSpeed = 1.0;
 controls.zoomSpeed = 1.2;
 controls.panSpeed = 0.8;
 controls.noZoom = false;
