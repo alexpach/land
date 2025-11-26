@@ -32,10 +32,17 @@ export class AudioController {
         this.stop();
         if (!url) return;
 
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-        this.midiData = new Uint8Array(arrayBuffer);
-        this.parseMidi();
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+            const arrayBuffer = await response.arrayBuffer();
+            this.midiData = new Uint8Array(arrayBuffer);
+            this.parseMidi();
+            console.log("Music Loaded Successfully");
+        } catch (e) {
+            console.error("Music Load Error:", e);
+            alert(`Music Error: ${e.message}`);
+        }
     }
 
     parseMidi() {
@@ -60,6 +67,7 @@ export class AudioController {
 
                 if (chunkType === 'MTrk') {
                     const trackNotes = this.parseTrack(p, chunkLength);
+
                     if (trackNotes.length > maxNoteCount) {
                         maxNoteCount = trackNotes.length;
                         bestTrackNotes = trackNotes;
@@ -89,11 +97,28 @@ export class AudioController {
             currentTicks += deltaTime;
 
             let status = this.midiData[p];
+            let isRunningStatus = false;
+
             if (status & 0x80) {
-                lastStatus = status;
+                // New Status Byte
                 p++;
+                // Only update running status for Voice Channel Messages (0x80 - 0xEF)
+                // System Messages (0xF0 - 0xFF) do NOT affect running status in SMF usually, 
+                // or at least they shouldn't be used as running status.
+                if (status < 0xF0) {
+                    lastStatus = status;
+                }
             } else {
+                // Running Status
                 status = lastStatus;
+                isRunningStatus = true;
+            }
+
+            if (!status) {
+                // Should not happen if file is valid
+                console.warn("Missing status byte and no running status");
+                p++;
+                continue;
             }
 
             const type = status & 0xF0;
@@ -114,12 +139,26 @@ export class AudioController {
                 const note = this.midiData[p++];
                 const velocity = this.midiData[p++];
                 this.closeTrackNote(trackNotes, note, currentTicks);
-            } else if (type === 0xFF) { // Meta Event
-                const metaType = this.midiData[p++];
-                const { value: len, bytesRead: lenBytes } = this.readVarInt(p);
-                p += lenBytes;
-                p += len;
+            } else if (type === 0xF0) { // System Messages (Sysex, Meta)
+                if (status === 0xFF) { // Meta Event
+                    const metaType = this.midiData[p++];
+                    const { value: len, bytesRead: lenBytes } = this.readVarInt(p);
+                    p += lenBytes;
+                    p += len; // Skip Meta Event Data
+                } else if (status === 0xF0 || status === 0xF7) { // Sysex
+                    const { value: len, bytesRead: lenBytes } = this.readVarInt(p);
+                    p += lenBytes;
+                    p += len; // Skip Sysex Data
+                } else {
+                    // Other System Common/Realtime (shouldn't be in SMF tracks usually, but skip if found)
+                    // 0xF1, 0xF3: 1 byte data
+                    // 0xF2: 2 bytes data
+                    // 0xF6, 0xF8-0xFE: 0 bytes data
+                    if (status === 0xF1 || status === 0xF3) p += 1;
+                    else if (status === 0xF2) p += 2;
+                }
             } else {
+                // Control Change, Program Change, etc.
                 if (type === 0xC0 || type === 0xD0) p += 1;
                 else if (type === 0xB0 || type === 0xE0 || type === 0xA0) p += 2;
             }
