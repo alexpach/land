@@ -1383,17 +1383,17 @@ function createControlsUI() {
 
 // Setup Screen Logic
 const setupScreen = document.getElementById('setup-screen');
-const playerCountSelect = document.getElementById('player-count');
 const colorContainer = document.getElementById('color-container');
 const startBtn = document.getElementById('start-btn');
 
 const defaultColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];
+let numPlayers = 2;
 
 function updateColorPickers() {
-    const count = parseInt(playerCountSelect.value);
     colorContainer.innerHTML = '';
 
-    for (let i = 0; i < count; i++) {
+    // Render Players
+    for (let i = 0; i < numPlayers; i++) {
         const wrapper = document.createElement('div');
         wrapper.className = 'color-picker-wrapper';
 
@@ -1410,16 +1410,44 @@ function updateColorPickers() {
         wrapper.appendChild(input);
         colorContainer.appendChild(wrapper);
     }
+
+    // Add [+] Button
+    if (numPlayers < 4) {
+        const addBtn = document.createElement('button');
+        addBtn.className = 'icon-btn';
+        addBtn.innerText = '+';
+        addBtn.title = "Add Player";
+        addBtn.onclick = () => {
+            numPlayers++;
+            updateColorPickers();
+        };
+        colorContainer.appendChild(addBtn);
+    }
+
+    // Add [-] Button (if > 2)
+    if (numPlayers > 2) {
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'icon-btn';
+        removeBtn.innerText = '-';
+        removeBtn.title = "Remove Player";
+        removeBtn.onclick = () => {
+            numPlayers--;
+            updateColorPickers();
+        };
+        colorContainer.appendChild(removeBtn);
+    }
 }
 
-playerCountSelect.addEventListener('change', updateColorPickers);
 updateColorPickers(); // Init
 
-startBtn.addEventListener('click', () => {
+startBtn.addEventListener('click', startGame);
+
+function startGame() {
     const mapSize = document.getElementById('map-size').value;
     const movesPerTurn = parseInt(document.getElementById('moves-per-turn').value);
-    const playerCount = parseInt(playerCountSelect.value);
+    const musicUrl = document.getElementById('music-select').value;
 
+    const playerCount = numPlayers; // Use numPlayers directly
     const players = [];
     for (let i = 0; i < playerCount; i++) {
         const colorHex = document.getElementById(`color-p${i}`).value;
@@ -1438,13 +1466,11 @@ startBtn.addEventListener('click', () => {
     // Hide Screen
     setupScreen.style.display = 'none';
 
-    const musicUrl = document.getElementById('music-select').value;
-
     // Start Game
-    startGame(players, movesPerTurn, musicUrl);
-});
+    initGame(players, movesPerTurn, musicUrl);
+}
 
-function startGame(players, movesPerTurn, musicUrl) {
+function initGame(players, movesPerTurn, musicUrl) {
     // Initialize Game State
     gameState = {
         players: players,

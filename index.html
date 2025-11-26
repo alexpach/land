@@ -87,6 +87,35 @@
     .control-group {
       margin-bottom: 25px;
       text-align: left;
+      flex: 1;
+      /* Allow growing in row */
+    }
+
+    .row-group {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .icon-btn {
+      background: #333;
+      color: white;
+      border: 2px solid white;
+      width: 30px;
+      height: 30px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 2px 2px 0px black;
+      margin-top: 25px;
+      /* Align with inputs */
+    }
+
+    .icon-btn:hover {
+      background: #555;
     }
 
     label {
@@ -283,20 +312,22 @@
     <div class="setup-container">
       <h1>The Game of Land</h1>
 
-      <div class="control-group">
-        <label>Map Size</label>
-        <select id="map-size">
-          <option value="Small">Small</option>
-          <option value="Medium" selected>Medium</option>
-          <option value="Large">Large</option>
-          <option value="Extra-Large">Extra Large</option>
-          <option value="XXL">XXL</option>
-        </select>
-      </div>
+      <div class="row-group">
+        <div class="control-group">
+          <label>Map Size</label>
+          <select id="map-size">
+            <option value="Small">Small</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Large">Large</option>
+            <option value="Extra-Large">Extra Large</option>
+            <option value="XXL">XXL</option>
+          </select>
+        </div>
 
-      <div class="control-group">
-        <label>Moves Per Turn</label>
-        <input type="number" id="moves-per-turn" value="5" min="1" max="9">
+        <div class="control-group">
+          <label>Moves/Turn</label>
+          <input type="number" id="moves-per-turn" value="5" min="1" max="9">
+        </div>
       </div>
 
       <div class="control-group">
@@ -305,20 +336,16 @@
           <option value="">None</option>
           <option value="/music/woodie_guthrie.mid" selected>Woodie Guthrie - This Land</option>
           <option value="/music/country_roads.mid">Take Me Home, Country Roads (Full)</option>
+          <option value="/music/mountain_king.mid">In the Hall of the Mountain King (Generated)</option>
+          <option value="/music/test_scale.mid">Chromatic Scale (Test)</option>
           <option value="/music/this_land.mid">Simple Melody (Generated)</option>
         </select>
       </div>
 
       <div class="control-group">
         <label>Players</label>
-        <select id="player-count">
-          <option value="2" selected>2 Players</option>
-          <option value="3">3 Players</option>
-          <option value="4">4 Players</option>
-        </select>
-
         <div id="color-container" class="color-pickers">
-          <!-- Dynamic Color Pickers -->
+          <!-- Dynamic Color Pickers & Buttons -->
         </div>
       </div>
 
