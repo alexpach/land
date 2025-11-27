@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Land - Rules</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Press Start 2P', cursive;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .rules-container {
+            background-color: #202080;
+            padding: 40px;
+            border: 4px solid white;
+            border-radius: 8px;
+            box-shadow: 8px 8px 0px #000000;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #ffcc00;
+            text-align: center;
+            margin-top: 0;
+            font-size: 24px;
+            text-shadow: 2px 2px #000000;
+        }
+
+        h2 {
+            color: #00ff00;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px #000000;
+        }
+
+        ul {
+            padding-left: 20px;
+            font-size: 12px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .back-btn {
+            display: block;
+            width: 100%;
+            background: #ff0000;
+            color: white;
+            border: 2px solid white;
+            padding: 15px;
+            font-size: 16px;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px #000000;
+            margin-top: 30px;
+            text-align: center;
+            text-decoration: none;
+            box-sizing: border-box;
+        }
+
+        .back-btn:hover {
+            background: #ff4444;
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000000;
+        }
+
+        .back-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px #000000;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #fff;
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="rules-container">
+        <h1>Game Rules</h1>
+
+        <h2>Objective</h2>
+        <ul>
+            <li>Capture territory by <strong>surrounding</strong> tiles.</li>
+            <li>The first player to capture the majority of tiles wins!</li>
+        </ul>
+
+        <h2>How to Play</h2>
+        <ul>
+            <li>Click or tap an empty corner of a tile to place a puck.</li>
+            <li>Click a <strong>vulnerable</strong> (not connected to any captured land) opponent's puck to remove it.
+                Click again to take the spot.</li>
+            <li><strong>Capture</strong>: Completely surround one or more tiles to claim them.</li>
+        </ul>
+
+        <h2>Mystery Boxes</h2>
+        <ul>
+            <li>Capture a <strong>pentagon</strong> with a Mystery Box to get a surprise.</li>
+            <li><strong>Contents</strong>: Bonus moves (+1, +2 or +3) or a <strong>BOMB</strong>!</li>
+        </ul>
+
+        <a href="/land/" class="back-btn">Back to Game</a>
+    </div>
+</body>
+
+</html>

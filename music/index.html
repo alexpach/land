@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Debugger</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=block" rel="stylesheet">
+    <style>
+        body {
+            background-color: #111;
+            color: #eee;
+            font-family: 'Press Start 2P', monospace;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #ffcc00;
+            text-shadow: 2px 2px #000;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .control-panel {
+            background: #222;
+            border: 2px solid #444;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        select,
+        button {
+            font-family: inherit;
+            padding: 10px;
+            margin: 5px;
+            background: #000;
+            color: #fff;
+            border: 1px solid #666;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #333;
+        }
+
+        button.active {
+            background: #004400;
+            border-color: #00ff00;
+        }
+
+        #debug-log {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            color: #0f0;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .stat {
+            color: #aaa;
+            font-size: 0.8em;
+        }
+
+        .stat span {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Music Debugger</h1>
+
+        <div class="control-panel">
+            <div class="status-row">
+                <div class="stat">Status: <span id="status">Idle</span></div>
+                <div class="stat">Tempo: <span id="tempo">---</span> BPM</div>
+                <div class="stat">Time: <span id="time">0.00</span>s</div>
+            </div>
+
+            <select id="song-select">
+                <option value="">-- Select Song --</option>
+                <option value="/music/woodie_guthrie.mid">Woodie Guthrie - This Land</option>
+                <option value="/music/mountain_king.mid">In the Hall of the Mountain King (Generated)</option>
+                <option value="/music/test_scale.mid">Chromatic Scale (Test)</option>
+                <option value="/music/this_land.mid">Simple Melody (Generated)</option>
+            </select>
+
+            <br>
+            <button id="btn-load">Load</button>
+            <button id="btn-play">Play</button>
+            <button id="btn-stop">Stop</button>
+            <button id="btn-mute">Mute</button>
+        </div>
+
+        <h3>Debug Log</h3>
+        <div id="debug-log"></div>
+    </div>
+
+    <script type="module">
+        import { AudioController } from '../src/audio/AudioController.js';
+
+        const audio = new AudioController();
+        const logEl = document.getElementById('debug-log');
+        const statusEl = document.getElementById('status');
+        const tempoEl = document.getElementById('tempo');
+        const timeEl = document.getElementById('time');
+
+        // Override console.log to show in debug div
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+
+        function logToDiv(type, args) {
+            const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
+            const line = document.createElement('div');
+            line.textContent = `[${type}] ${msg}`;
+            if (type === 'ERROR') line.style.color = '#ff5555';
+            if (type === 'WARN') line.style.color = '#ffff55';
+            logEl.appendChild(line);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        console.log = (...args) => { originalLog(...args); logToDiv('INFO', args); };
+        console.warn = (...args) => { originalWarn(...args); logToDiv('WARN', args); };
+        console.error = (...args) => { originalError(...args); logToDiv('ERROR', args); };
+
+        // UI Handlers
+        document.getElementById('btn-load').onclick = async () => {
+            const url = document.getElementById('song-select').value;
+            if (!url) {
+                console.warn("No song selected");
+                return;
+            }
+
+            statusEl.textContent = "Loading...";
+            try {
+                await audio.load(url);
+                await audio.init(); // Ensure context is ready
+                statusEl.textContent = "Loaded";
+                console.log(`Loaded: ${url}`);
+                console.log(`MIDI Stats: ${audio.notes.length} notes, ${audio.totalTicks} ticks`);
+
+                // Expose internal stats
+                tempoEl.textContent = audio.baseTempo;
+            } catch (e) {
+                console.error(e);
+                statusEl.textContent = "Error";
+            }
+        };
+
+        document.getElementById('btn-play').onclick = () => {
+            if (!audio.midiData) {
+                console.warn("Load a song first!");
+                return;
+            }
+            audio.play();
+            statusEl.textContent = "Playing";
+            console.log("Playback started");
+        };
+
+        document.getElementById('btn-stop').onclick = () => {
+            audio.stop();
+            statusEl.textContent = "Stopped";
+            console.log("Playback stopped");
+        };
+
+        document.getElementById('btn-mute').onclick = (e) => {
+            const isMuted = audio.toggleMute();
+            e.target.textContent = isMuted ? "Unmute" : "Mute";
+            console.log(`Muted: ${isMuted}`);
+        };
+
+        // Update Loop for UI
+        setInterval(() => {
+            if (audio.isPlaying) {
+                tempoEl.textContent = Math.round(audio.currentTempo);
+                if (audio.audioContext) {
+                    timeEl.textContent = audio.audioContext.currentTime.toFixed(2);
+                }
+            }
+        }, 100);
+
+        console.log("Debug Page Initialized");
+    </script>
+</body>
+
+</html>

@@ -15,6 +15,7 @@ export class AudioController {
         this.masterGain = null;
         this.isMuted = false;
         this.songStartTime = 0;
+        this.onEnded = null; // Callback for when song ends
     }
 
     async init() {
@@ -278,6 +279,14 @@ export class AudioController {
 
         // Loop Logic
         if (this.currentNoteIndex >= this.notes.length && this.notes.length > 0) {
+            // Check for external onEnded callback (for Random Mode)
+            if (this.onEnded) {
+                this.isPlaying = false;
+                this.onEnded();
+                return; // Stop scheduling this track
+            }
+
+            // Internal Loop Logic (Default)
             // Calculate when the current loop ends
             const loopDuration = this.totalTicks * secondsPerTick;
             const loopEndTime = this.songStartTime + loopDuration;

@@ -295,12 +295,13 @@ function createMysteryBoxes() {
     // 2. Text: Black (Low)
     ctx.fillStyle = '#000000';
     // 75% of box size -> 75% of 256px = 192px
-    ctx.font = 'bold 192px "Press Start 2P", monospace';
+    ctx.font = 'bold 160px "Press Start 2P", monospace'; // Reduced from 192px for better centering
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     // Draw Text
-    ctx.fillText('?', 128, 128);
+    // Slightly adjust Y to visually center the ? (fonts can be top-heavy)
+    ctx.fillText('?', 128, 138);
 
     const bumpMap = new THREE.CanvasTexture(canvas);
 
@@ -320,7 +321,9 @@ function createMysteryBoxes() {
     const matTop = new THREE.MeshStandardMaterial({
         color: 0xFFD700, // Same Gold Color
         bumpMap: bumpMap,
-        bumpScale: 0.15, // Stronger deboss (approx 10% of width)
+        bumpScale: 0.3, // Stronger deboss (was 0.15)
+        aoMap: bumpMap, // Use same map for AO to darken the text
+        aoMapIntensity: 1.0,
         roughness: 0.3,
         metalness: 0.8,
         emissive: 0x222200,
@@ -1360,7 +1363,7 @@ function updateTurnUI() {
     `;
 }
 
-function createControlsUI() {
+function createControlsUI(musicUrl) {
     let controls = document.getElementById('controls-ui');
     if (!controls) {
         controls = document.createElement('div');
@@ -1368,17 +1371,19 @@ function createControlsUI() {
         document.body.appendChild(controls);
     }
 
-    // Mute Button
-    const muteBtn = document.createElement('button');
-    muteBtn.innerText = 'MUTE';
+    // Only add Mute button if music is playing
+    if (musicUrl) {
+        const muteBtn = document.createElement('button');
+        muteBtn.innerText = 'MUTE';
 
-    muteBtn.addEventListener('click', () => {
-        const isMuted = audioController.toggleMute();
-        muteBtn.innerText = isMuted ? 'UNMUTE' : 'MUTE';
-        muteBtn.style.color = isMuted ? '#ff5555' : 'white';
-    });
+        muteBtn.addEventListener('click', () => {
+            const isMuted = audioController.toggleMute();
+            muteBtn.innerText = isMuted ? 'UNMUTE' : 'MUTE';
+            muteBtn.style.color = isMuted ? '#ff5555' : 'white';
+        });
 
-    controls.appendChild(muteBtn);
+        controls.appendChild(muteBtn);
+    }
 }
 
 // Setup Screen Logic
@@ -1406,8 +1411,8 @@ function updateColorPickers() {
         input.value = defaultColors[i] || '#ffffff';
         input.id = `color-p${i}`;
 
-        wrapper.appendChild(label);
         wrapper.appendChild(input);
+        wrapper.appendChild(label);
         colorContainer.appendChild(wrapper);
     }
 
@@ -1440,6 +1445,14 @@ function updateColorPickers() {
 
 updateColorPickers(); // Init
 
+document.getElementById('rules-btn').addEventListener('click', () => {
+    window.location.href = 'rules/';
+});
+
+document.getElementById('menu-btn').addEventListener('click', () => {
+    window.location.reload();
+});
+
 startBtn.addEventListener('click', startGame);
 
 function startGame() {
@@ -1465,6 +1478,7 @@ function startGame() {
 
     // Hide Screen
     setupScreen.style.display = 'none';
+    document.getElementById('menu-btn').style.display = 'flex'; // Show Menu Button
 
     // Start Game
     initGame(players, movesPerTurn, musicUrl);
@@ -1476,7 +1490,7 @@ function initGame(players, movesPerTurn, musicUrl) {
         players: players,
         currentPlayerIndex: 0,
         movesInTurn: 0,
-        maxMovesPerTurn: parseInt(document.getElementById('moves-per-turn').value) || 5,
+        maxMovesPerTurn: parseInt(document.getElementById('moves-per-turn').value) || 3,
         scores: new Array(players.length).fill(0), // Changed playerCount to players.length for consistency
         pucksPlacedInTurn: new Set(),
         animationDelay: 0,
@@ -1488,7 +1502,43 @@ function initGame(players, movesPerTurn, musicUrl) {
     createGeometry();
 
     // Start Music
-    if (musicUrl) {
+    const availableSongs = [
+        '/music/woodie_guthrie.mid',
+        '/music/mountain_king.mid',
+        '/music/this_land.mid'
+    ];
+
+    if (musicUrl === 'random') {
+        const playRandomSong = () => {
+            const randomSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
+            console.log(`Playing Random Song: ${randomSong}`);
+
+            audioController.load(randomSong).then(() => {
+                // Randomize Tempo (Base +/- 20%)
+                // We need to wait for load to get base tempo, but AudioController sets currentTempo = baseTempo on play()
+                // So we can override it after init/play or modify AudioController to respect pre-set tempo.
+                // For now, let's just play, and AudioController will use default. 
+                // To randomize start tempo, we might need to tweak AudioController or set it after play starts?
+                // Actually, let's just let it play at default for the first loop of the random song, 
+                // OR we can hack it by setting currentTempo immediately after play.
+
+                audioController.init().then(() => {
+                    audioController.play();
+
+                    // Random Tempo: 80% to 120% of base (230)
+                    // Note: AudioController resets to 230 in play(). 
+                    // Let's allow it to vary.
+                    const randomTempo = Math.floor(230 * (0.8 + Math.random() * 0.4));
+                    audioController.currentTempo = randomTempo;
+                    console.log(`Random Tempo: ${randomTempo}`);
+                });
+            });
+        };
+
+        audioController.onEnded = playRandomSong;
+        playRandomSong();
+    } else if (musicUrl) {
+        audioController.onEnded = null; // Disable external loop
         audioController.load(musicUrl).then(() => {
             audioController.init().then(() => {
                 audioController.play();
@@ -1498,7 +1548,7 @@ function initGame(players, movesPerTurn, musicUrl) {
         audioController.stop();
     }
 
-    createControlsUI();
+    createControlsUI(musicUrl);
 
     // Startup Banner Sequence
     showTurnBanner("The Game of Land", new THREE.Color(0xffffff));

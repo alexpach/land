@@ -124,30 +124,7 @@
       text-shadow: 2px 2px #000000;
     }
 
-    select {
-      width: 100%;
-      height: 50px;
-      padding: 10px 30px 10px 10px;
-      /* Extra right padding for arrow */
-      font-family: 'Press Start 2P', cursive;
-      font-size: 12px;
-      line-height: 1.5;
-      box-sizing: border-box;
-      background: #000000;
-      color: #ffffff;
-      border: 2px solid #ffffff;
-      border-radius: 0;
-      outline: none;
-      box-shadow: inset 2px 2px 0px rgba(0, 0, 0, 0.5);
-      appearance: none;
-      /* Remove default arrow to style custom if needed, but for now just padding */
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      background-size: 12px;
-    }
-
+    select,
     input[type="number"] {
       width: 100%;
       height: 50px;
@@ -206,8 +183,8 @@
     }
 
     #rules-btn {
-      background: #000 url('/images/book_icon.png') no-repeat center center;
-      background-size: 36px 36px;
+      background: #444 url('/land/images/book_icon.png') no-repeat center center;
+      background-size: 24px 24px;
       color: transparent;
       /* Hide emoji */
       border: 2px solid white;
@@ -232,39 +209,6 @@
       box-shadow: 0px 0px 0px #000000;
     }
 
-    #menu-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: #333;
-      color: white;
-      border: 2px solid white;
-      width: 40px;
-      height: 40px;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 20px;
-      cursor: pointer;
-      display: none;
-      /* Hidden on start screen */
-      align-items: center;
-      justify-content: center;
-      box-shadow: 4px 4px 0px black;
-      z-index: 3000;
-      /* Above setup screen */
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-
-    #menu-btn:hover {
-      background: #555;
-      transform: translate(2px, 2px);
-      box-shadow: 2px 2px 0px black;
-    }
-
-    #menu-btn:active {
-      transform: translate(4px, 4px);
-      box-shadow: 0px 0px 0px black;
-    }
-
     button#start-btn {
       background: #ff0000;
       /* Mario Red */
@@ -284,17 +228,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    button#start-btn:hover {
-      background: #ff4444;
-      transform: translate(2px, 2px);
-      box-shadow: 2px 2px 0px #000000;
-    }
-
-    button#start-btn:active {
-      transform: translate(4px, 4px);
-      box-shadow: 0px 0px 0px #000000;
     }
 
     #error-overlay {
@@ -406,6 +339,7 @@
       }
     }
   </style>
+  <script type="module" crossorigin src="/land/assets/index-DOY-UAJz.js"></script>
 </head>
 
 <body>
@@ -479,12 +413,10 @@
       </div>
 
       <div style="margin-top: 40px; font-size: 0.6em; color: #888; text-align: center;">
-        v1.0.2 &copy; 2025 Alex Pachikov. All rights reserved.
+        v1.0.1 &copy; 2025 Alex Pachikov. All rights reserved.
       </div>
     </div>
   </div>
-  <button id="menu-btn" title="Main Menu">☰</button>
-  <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>
