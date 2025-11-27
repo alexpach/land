@@ -1,11 +1,11 @@
 {
   "name": "land-game",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp -r music dist/ && cp -r images dist/",
     "preview": "vite preview"
   },
   "devDependencies": {

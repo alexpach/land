@@ -1,10 +1,12 @@
 # Changelog
 
+## [1.0.3] - 2025-11-27
+- **Deployment Fix**: Fixed music playback on GitHub Pages by ensuring assets are correctly copied to the build folder and using relative paths.
+
 ## [1.0.2] - 2025-11-27
-- **Music Restoration**: Restored original MIDI files and fixed missing directory issues.
 - **Main Menu**: Added hamburger menu button to game screen for quick return to start.
 - **Visual Polish**: Fixed start screen layout, button alignments, and dropdown styling.
-- **Navigation**: Fixed routing issues for Rules page on GitHub Pages.
+- **Navigation**: Fixed routing issues for Rules page.
 - **Bug Fixes**: Fixed Mute button appearing when no music is selected.
 
 ## [1.0.1] - 2025-11-26

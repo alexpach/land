@@ -1503,9 +1503,9 @@ function initGame(players, movesPerTurn, musicUrl) {
 
     // Start Music
     const availableSongs = [
-        '/music/woodie_guthrie.mid',
-        '/music/mountain_king.mid',
-        '/music/this_land.mid'
+        'music/woodie_guthrie.mid',
+        'music/mountain_king.mid',
+        'music/this_land.mid'
     ];
 
     if (musicUrl === 'random') {
