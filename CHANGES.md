@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.4] - 2025-11-30
+- **Game Over Screen**: Improved UI to be non-blocking, allowing map exploration after winning. Added a "Main Menu" button.
+- **Fixes**: Fixed broken links by ensuring relative paths are used correctly.
+- **Music**: Simplified music options to only include working tracks.
+
 ## [1.0.3] - 2025-11-27
 - **Deployment Fix**: Fixed music playback on GitHub Pages by ensuring assets are correctly copied to the build folder and using relative paths.
 

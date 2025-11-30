@@ -884,14 +884,16 @@ function gameOver(winnerId, tiePlayers = []) {
         screen.style.left = '0';
         screen.style.width = '100%';
         screen.style.height = '100%';
-        screen.style.background = 'rgba(0,0,0,0.9)';
+        screen.style.background = 'rgba(0,0,0,0.3)'; // More transparent
         screen.style.display = 'flex';
         screen.style.flexDirection = 'column';
         screen.style.alignItems = 'center';
-        screen.style.justifyContent = 'center';
+        screen.style.justifyContent = 'space-between'; // Space out top/bottom
         screen.style.zIndex = '3000';
         screen.style.fontFamily = "'Press Start 2P', cursive";
         screen.style.color = 'white';
+        screen.style.pointerEvents = 'none'; // Allow clicking through to map
+        screen.style.padding = '40px 0'; // Add padding
         document.body.appendChild(screen);
     }
 
@@ -900,25 +902,29 @@ function gameOver(winnerId, tiePlayers = []) {
     if (winnerId !== -1) {
         const winner = gameState.players[winnerId];
         content = `
-            <h1 style="color: #${winner.color.getHexString()}; text-shadow: 4px 4px 0px black; font-size: 48px; text-align: center;">
-                ${winner.name} WINS!
-            </h1>
-            <div style="margin-top: 20px; font-size: 24px;">
-                Score: ${gameState.scores[winnerId]}
+            <div style="pointer-events: auto; text-align: center; background: rgba(0,0,0,0.7); padding: 20px; border-radius: 10px; border: 2px solid white;">
+                <h1 style="color: #${winner.color.getHexString()}; text-shadow: 4px 4px 0px black; font-size: 32px; margin: 0;">
+                    ${winner.name} WINS!
+                </h1>
+                <div style="margin-top: 10px; font-size: 16px;">
+                    Score: ${gameState.scores[winnerId]}
+                </div>
             </div>
         `;
     } else {
         // Tie
         const names = tiePlayers.map(id => gameState.players[id].name).join(' & ');
         content = `
-            <h1 style="color: #ffffff; text-shadow: 4px 4px 0px black; font-size: 48px; text-align: center;">
-                IT'S A TIE!
-            </h1>
-            <div style="margin-top: 20px; font-size: 24px; color: #cccccc;">
-                ${names}
-            </div>
-            <div style="margin-top: 10px; font-size: 24px;">
-                Score: ${gameState.scores[tiePlayers[0]]}
+            <div style="pointer-events: auto; text-align: center; background: rgba(0,0,0,0.7); padding: 20px; border-radius: 10px; border: 2px solid white;">
+                <h1 style="color: #ffffff; text-shadow: 4px 4px 0px black; font-size: 32px; margin: 0;">
+                    IT'S A TIE!
+                </h1>
+                <div style="margin-top: 10px; font-size: 16px; color: #cccccc;">
+                    ${names}
+                </div>
+                <div style="margin-top: 5px; font-size: 16px;">
+                    Score: ${gameState.scores[tiePlayers[0]]}
+                </div>
             </div>
         `;
     }
@@ -926,16 +932,17 @@ function gameOver(winnerId, tiePlayers = []) {
     screen.innerHTML = `
         ${content}
         <button id="restart-btn" style="
-            margin-top: 50px;
-            padding: 20px 40px;
-            font-size: 24px;
+            pointer-events: auto;
+            padding: 15px 30px;
+            font-size: 18px;
             font-family: 'Press Start 2P', cursive;
-            background: #ff0000;
+            background: #333;
             color: white;
-            border: 4px solid white;
+            border: 2px solid white;
             cursor: pointer;
-            box-shadow: 6px 6px 0px black;
-        ">PLAY AGAIN</button>
+            box-shadow: 4px 4px 0px black;
+            margin-bottom: 20px;
+        ">MAIN MENU</button>
     `;
 
     document.getElementById('restart-btn').addEventListener('click', () => {
@@ -1503,9 +1510,7 @@ function initGame(players, movesPerTurn, musicUrl) {
 
     // Start Music
     const availableSongs = [
-        'music/woodie_guthrie.mid',
-        'music/mountain_king.mid',
-        'music/this_land.mid'
+        'music/woodie_guthrie.mid'
     ];
 
     if (musicUrl === 'random') {
