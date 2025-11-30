@@ -9,7 +9,7 @@ export default defineConfig({
             name: 'serve-static-root',
             configureServer(server) {
                 server.middlewares.use((req, res, next) => {
-                    if (req.url.startsWith('/music/') || req.url.startsWith('/images/')) {
+                    if (req.url.startsWith('/music/') || req.url.startsWith('/images/') || req.url.endsWith('CHANGES.md')) {
                         const filePath = path.join(__dirname, req.url);
                         if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
                             res.setHeader('Content-Type', getContentType(filePath));
